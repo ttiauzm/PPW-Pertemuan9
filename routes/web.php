@@ -1,11 +1,16 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\JobController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/admin', function () {
+    return "Halo Admin!";
+})->middleware(['auth', 'isAdmin']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -17,4 +22,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+Route::get('/myprofile', function () {
+    return "Profil";
+})->middleware(['auth']);
+
+Route::get('/admin/jobs', function () {
+    return "Daftar lowongan kerja (khusus admin)";
+})->middleware(['auth', 'isAdmin']);
+
+require __DIR__ . '/auth.php';
