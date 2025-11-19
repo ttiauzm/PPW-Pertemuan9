@@ -1,33 +1,55 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ImportTemplateController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/admin', function () {
-    return "Halo Admin!";
-})->middleware(['auth', 'isAdmin']);
-
+// DASHBOARD
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware('auth')->name('dashboard');
 
+// USER ROUTES
+Route::middleware('auth')->group(function() {
+    // List jobs
+    Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
+    // Job detail
+    Route::get('/jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
+    // Apply job
+    Route::post('/apply', [ApplicationController::class, 'store'])->name('applications.store');
+});
+
+// PROFILE ROUTES
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/myprofile', function () {
-    return "Profil";
-})->middleware(['auth']);
+// ADMIN ROUTES
+Route::middleware(['auth', 'isAdmin'])->prefix('admin')->group(function() {
 
-Route::get('/admin/jobs', function () {
-    return "Daftar lowongan kerja (khusus admin)";
-})->middleware(['auth', 'isAdmin']);
+    // Job management
+    Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create');
+    Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');
+    Route::get('/jobs/{id}/edit', [JobController::class, 'edit'])->name('jobs.edit');
+    Route::put('/jobs/{id}', [JobController::class, 'update'])->name('jobs.update');
+    Route::delete('/jobs/{id}', [JobController::class, 'destroy'])->name('jobs.destroy');
 
-require __DIR__ . '/auth.php';
+    // Applicants management
+    Route::get('/jobs/{job_id}/applicants', [JobController::class, 'applicants'])->name('jobs.applicants');
+    Route::post('/applications/{id}/status', [ApplicationController::class, 'updateStatus'])
+        ->name('applications.updateStatus');
+
+    // Export applicants
+    Route::get('/export/{job_id}', [ExportController::class, 'export'])->name('export.applicants');
+
+    // Download import template
+    Route::get('/import/template', [ImportTemplateController::class, 'downloadTemplate'])
+        ->name('import.template');
+});
+
+require __DIR__.'/auth.php';
+
